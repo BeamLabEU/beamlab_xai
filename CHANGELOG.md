@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-14
+
+### Fixed
+- `Xai.Realtime.close/1` no longer crashes the connection process: no `handle_cast/2`
+  clause was defined for the `:close` cast it sends, so it fell through to
+  `use WebSockex`'s default (raising) implementation. Added the missing clause.
+- `Xai.Realtime.handle_disconnect/2` no longer unconditionally reconnects. It now
+  terminates cleanly on a locally-initiated close (`close/1`, or the internal
+  "error" event handler) and applies capped exponential backoff (500ms up to 30s,
+  giving up after 5 attempts) on genuine remote/error disconnects, instead of
+  hot-looping forever on e.g. a persistent auth failure.
+- `Xai.Video.generate/2` no longer silently drops `:aspect_ratio` and `:resolution`
+  options — they're now passed through to `GenerateVideoRequest`.
+- `Xai.Video.extend/2` now passes `:timeout` to the gRPC call and to polling
+  (from `opts` or the client's configured default), matching `generate/2` instead
+  of always falling back to the gRPC library's own default.
+- `Xai.Client` no longer infers TLS from `String.ends_with?(endpoint, ":443")`
+  (silently dropping to plaintext — and sending the Bearer API key unencrypted —
+  for any custom endpoint on a non-`:443` port). TLS is now controlled by an
+  explicit `:ssl` option, defaulting to `true`.
+
+### Added
+- Test coverage for `Xai.Realtime.handle_cast/2` (`:close`) and `handle_disconnect/2`
+  (local-close termination, reconnect, and attempt-cap termination), previously
+  untested.
+- `Xai.Video.build_generate_request/1` and `build_extend_request/1` extracted as
+  testable helpers, with tests covering the `:aspect_ratio`/`:resolution` fix above
+  (`test/xai/video_test.exs` was previously a placeholder with no real assertions).
+
 ## [0.1.0] - 2026-07-14
 
 First published release — nothing shipped to Hex before this version, so

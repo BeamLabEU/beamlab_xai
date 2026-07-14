@@ -28,5 +28,10 @@ defmodule Xai.ClientTest do
       client = Xai.Client.new(api_key: "test", connect: false)
       assert client.timeout == :timer.minutes(30)
     end
+
+    test "accepts an explicit :ssl option instead of inferring TLS from the port" do
+      client = Xai.Client.new(api_key: "test", connect: false, ssl: false)
+      assert client.api_key == "test"
+    end
   end
 end

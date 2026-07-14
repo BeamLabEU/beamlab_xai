@@ -19,6 +19,7 @@ defmodule Xai.Client do
   * `:api_key` - falls back to `XAI_API_KEY`
   * `:management_api_key` - for Collections / management (falls back to `XAI_MANAGEMENT_API_KEY`)
   * `:endpoint` - default "api.x.ai:443"
+  * `:ssl` - whether to use TLS for the gRPC connection, default `true`
   * `:timeout` - default 30 minutes
   """
 
@@ -50,10 +51,11 @@ defmodule Xai.Client do
 
     endpoint = Keyword.get(opts, :endpoint, @default_endpoint)
     timeout = Keyword.get(opts, :timeout, @default_timeout)
+    ssl = Keyword.get(opts, :ssl, true)
 
     channel =
       case Keyword.get(opts, :channel) do
-        nil -> maybe_connect(endpoint, api_key, Keyword.get(opts, :connect, true))
+        nil -> maybe_connect(endpoint, api_key, ssl, Keyword.get(opts, :connect, true))
         channel -> channel
       end
 
@@ -81,10 +83,10 @@ defmodule Xai.Client do
 
   def auth_metadata(_), do: []
 
-  defp maybe_connect(_endpoint, _api_key, false), do: nil
+  defp maybe_connect(_endpoint, _api_key, _ssl, false), do: nil
 
-  defp maybe_connect(endpoint, api_key, true) do
-    case connect(endpoint, api_key) do
+  defp maybe_connect(endpoint, api_key, ssl, true) do
+    case connect(endpoint, api_key, ssl) do
       {:ok, channel} ->
         channel
 
@@ -93,9 +95,9 @@ defmodule Xai.Client do
     end
   end
 
-  defp connect(endpoint, api_key) do
+  defp connect(endpoint, api_key, ssl) do
     cred =
-      if String.ends_with?(endpoint, ":443") do
+      if ssl do
         GRPC.Credential.new(ssl: [verify: :verify_peer, cacerts: :public_key.cacerts_get()])
       else
         nil

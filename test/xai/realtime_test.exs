@@ -52,6 +52,45 @@ defmodule Xai.RealtimeTest do
     end
   end
 
+  describe "handle_cast/2 (close)" do
+    test "close/1's :close cast returns {:close, state} instead of raising" do
+      state = %Xai.Realtime.State{}
+      assert {:close, ^state} = Xai.Realtime.handle_cast(:close, state)
+    end
+  end
+
+  describe "handle_disconnect/2" do
+    test "terminates (does not reconnect) after a locally-initiated close" do
+      state = %Xai.Realtime.State{}
+
+      assert {:ok, ^state} =
+               Xai.Realtime.handle_disconnect(%{reason: {:local, :normal}}, state)
+
+      assert {:ok, ^state} =
+               Xai.Realtime.handle_disconnect(%{reason: {:local, 1000, ""}}, state)
+    end
+
+    test "reconnects on an unexpected remote close, within the attempt cap" do
+      state = %Xai.Realtime.State{}
+
+      assert {:reconnect, ^state} =
+               Xai.Realtime.handle_disconnect(
+                 %{reason: {:remote, :closed}, attempt_number: 1},
+                 state
+               )
+    end
+
+    test "gives up and terminates once the reconnect attempt cap is exceeded" do
+      state = %Xai.Realtime.State{}
+
+      assert {:ok, ^state} =
+               Xai.Realtime.handle_disconnect(
+                 %{reason: {:remote, :closed}, attempt_number: 999},
+                 state
+               )
+    end
+  end
+
   describe "handle_frame (audio handling)" do
     test "handles audio.delta by calling on_audio callback with decoded bytes" do
       audio_received = :ets.new(:audio, [:set, :public])

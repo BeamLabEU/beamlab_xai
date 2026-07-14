@@ -23,15 +23,7 @@ defmodule Xai.Video do
   @spec generate(Xai.Client.t(), keyword()) :: {:ok, map()} | {:error, term()}
   def generate(client, opts) do
     timeout = Keyword.get(opts, :timeout, Xai.Client.default_timeout(client))
-
-    request = %Proto.GenerateVideoRequest{
-      prompt: Keyword.fetch!(opts, :prompt),
-      model: Keyword.get(opts, :model, "grok-imagine-video"),
-      duration: Keyword.get(opts, :duration)
-      # aspect_ratio and resolution are enums in the proto
-      # for simplicity we can pass atoms or integers; the generator handles some
-    }
-
+    request = build_generate_request(opts)
     metadata = Xai.Client.auth_metadata(client)
 
     case VideoStub.generate_video(client.channel, request,
@@ -52,21 +44,39 @@ defmodule Xai.Video do
   @doc "Extend a video"
   @spec extend(Xai.Client.t(), keyword()) :: {:ok, map()} | {:error, term()}
   def extend(client, opts) do
-    request = %Proto.ExtendVideoRequest{
-      prompt: Keyword.fetch!(opts, :prompt),
-      model: Keyword.get(opts, :model),
-      video: %Proto.VideoUrlContent{url: Keyword.fetch!(opts, :video_url)}
-    }
-
+    timeout = Keyword.get(opts, :timeout, Xai.Client.default_timeout(client))
+    request = build_extend_request(opts)
     metadata = Xai.Client.auth_metadata(client)
 
-    case VideoStub.extend_video(client.channel, request, metadata: metadata) do
+    case VideoStub.extend_video(client.channel, request, timeout: timeout, metadata: metadata) do
       {:ok, %Proto.StartDeferredResponse{request_id: rid}} ->
-        poll_for_video(client, rid, Xai.Client.default_timeout(client))
+        poll_for_video(client, rid, timeout)
 
       other ->
         other
     end
+  end
+
+  @doc false
+  @spec build_generate_request(keyword()) :: Proto.GenerateVideoRequest.t()
+  def build_generate_request(opts) do
+    %Proto.GenerateVideoRequest{
+      prompt: Keyword.fetch!(opts, :prompt),
+      model: Keyword.get(opts, :model, "grok-imagine-video"),
+      duration: Keyword.get(opts, :duration),
+      aspect_ratio: Keyword.get(opts, :aspect_ratio),
+      resolution: Keyword.get(opts, :resolution)
+    }
+  end
+
+  @doc false
+  @spec build_extend_request(keyword()) :: Proto.ExtendVideoRequest.t()
+  def build_extend_request(opts) do
+    %Proto.ExtendVideoRequest{
+      prompt: Keyword.fetch!(opts, :prompt),
+      model: Keyword.get(opts, :model),
+      video: %Proto.VideoUrlContent{url: Keyword.fetch!(opts, :video_url)}
+    }
   end
 
   defp poll_for_video(client, request_id, timeout, attempts \\ 60)

@@ -36,6 +36,10 @@ defmodule Xai.Realtime do
   @tts_url "wss://api.x.ai/v1/tts"
   @realtime_url "wss://api.x.ai/v1/realtime"
 
+  @max_reconnect_attempts 5
+  @reconnect_base_backoff_ms 500
+  @reconnect_max_backoff_ms 30_000
+
   defmodule State do
     @moduledoc false
     defstruct [
@@ -181,8 +185,25 @@ defmodule Xai.Realtime do
   end
 
   @impl true
-  def handle_disconnect(_reason, state) do
+  def handle_disconnect(%{reason: {:local, _}}, state), do: {:ok, state}
+  def handle_disconnect(%{reason: {:local, _, _}}, state), do: {:ok, state}
+
+  def handle_disconnect(%{attempt_number: attempt}, state)
+      when attempt > @max_reconnect_attempts do
+    {:ok, state}
+  end
+
+  def handle_disconnect(%{attempt_number: attempt}, state) do
+    backoff =
+      min(@reconnect_base_backoff_ms * Integer.pow(2, attempt - 1), @reconnect_max_backoff_ms)
+
+    Process.sleep(backoff)
     {:reconnect, state}
+  end
+
+  @impl WebSockex
+  def handle_cast(:close, state) do
+    {:close, state}
   end
 
   @impl WebSockex
