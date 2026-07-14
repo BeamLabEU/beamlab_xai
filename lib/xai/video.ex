@@ -64,13 +64,17 @@ defmodule Xai.Video do
     end
   end
 
-  defp poll_for_video(client, request_id, timeout, attempts \\ 60) do
-    if attempts <= 0, do: {:error, :timeout}
+  defp poll_for_video(client, request_id, timeout, attempts \\ 60)
 
+  defp poll_for_video(_client, _request_id, _timeout, attempts) when attempts <= 0 do
+    {:error, :timeout}
+  end
+
+  defp poll_for_video(client, request_id, timeout, attempts) do
     req = %Proto.GetDeferredVideoRequest{request_id: request_id}
     metadata = Xai.Client.auth_metadata(client)
 
-    case Proto.Video.Stub.get_deferred_video(client.channel, req, metadata: metadata) do
+    case Proto.Video.Stub.get_deferred_video(client.channel, req, timeout: timeout, metadata: metadata) do
       {:ok, %Proto.GetDeferredVideoResponse{status: :DONE, response: resp}} ->
         {:ok, resp}
 
@@ -85,4 +89,3 @@ defmodule Xai.Video do
     end
   end
 end
-

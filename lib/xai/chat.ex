@@ -64,8 +64,6 @@ defmodule Xai.Chat do
     }
   end
 
-
-
   @doc "Send the messages and get a full response."
   @spec sample(t(), keyword()) :: {:ok, Proto.GetChatCompletionResponse.t()} | {:error, term()}
   def sample(%__MODULE__{client: client, model: model, messages: messages}, opts \\ []) do
@@ -109,24 +107,21 @@ defmodule Xai.Chat do
 
     metadata = Xai.Client.auth_metadata(client)
 
-    grpc_stream = Proto.Chat.Stub.get_completion_chunk(
-      client.channel,
-      request,
-      metadata: metadata
-    )
+    case Proto.Chat.Stub.get_completion_chunk(
+           client.channel,
+           request,
+           timeout: timeout,
+           metadata: metadata
+         ) do
+      {:ok, chunk_stream} ->
+        Stream.map(chunk_stream, fn
+          {:ok, chunk} -> chunk
+          {:error, reason} -> raise "chat stream error: #{inspect(reason)}"
+        end)
 
-    Stream.resource(
-      fn -> grpc_stream end,
-      fn stream ->
-        case GRPC.Stub.recv(stream, timeout: timeout) do
-          {:ok, chunk} -> {[chunk], stream}
-          {:error, :timeout} -> {:halt, stream}
-          {:error, reason} -> {:halt, reason}
-          :ok -> {:halt, stream}
-        end
-      end,
-      fn _ -> :ok end
-    )
+      {:error, reason} ->
+        raise "failed to start chat stream: #{inspect(reason)}"
+    end
   end
 
   @doc "Helper to pull text delta from a chunk (adjust as the chunk shape evolves)."
@@ -134,13 +129,10 @@ defmodule Xai.Chat do
     outputs
     |> List.first()
     |> case do
-      %{message: %{content: content}} -> content
+      %{delta: %{content: content}} when is_binary(content) -> content
       _ -> ""
     end
   end
 
   def extract_delta(_), do: ""
 end
-
-
-

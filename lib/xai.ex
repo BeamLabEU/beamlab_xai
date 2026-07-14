@@ -33,5 +33,3 @@ defmodule Xai do
     Application.spec(:xai, :vsn) |> to_string()
   end
 end
-
-

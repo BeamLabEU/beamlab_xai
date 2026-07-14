@@ -23,10 +23,10 @@ defmodule Xai.IntegrationTest do
   @tag :integration
   test "basic chat works with real API (via REST for now)", %{api_key: api_key} do
     # Note: gRPC chat is currently returning 400; using REST to verify the key and basic connectivity
-    url = 'https://api.x.ai/v1/chat/completions'
+    url = ~c"https://api.x.ai/v1/chat/completions"
     headers = [
-      {'authorization', 'Bearer #{api_key}'},
-      {'content-type', 'application/json'}
+      {~c"authorization", ~c"Bearer #{api_key}"},
+      {~c"content-type", ~c"application/json"}
     ]
     body = Jason.encode!(%{
       model: "grok-4.20-0309-non-reasoning",
@@ -35,7 +35,7 @@ defmodule Xai.IntegrationTest do
     })
 
     {:ok, {{_, 200, _}, _headers, response_body}} =
-      :httpc.request(:post, {url, headers, 'application/json', body}, [], [])
+      :httpc.request(:post, {url, headers, ~c"application/json", body}, [], [])
 
     response = Jason.decode!(response_body)
     content = get_in(response, ["choices", Access.at(0), "message", "content"])

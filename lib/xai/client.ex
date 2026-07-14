@@ -52,8 +52,10 @@ defmodule Xai.Client do
     timeout = Keyword.get(opts, :timeout, @default_timeout)
 
     channel =
-      Keyword.get(opts, :channel) ||
-        (if Keyword.get(opts, :connect, true), do: elem(connect(endpoint, api_key), 1), else: nil)
+      case Keyword.get(opts, :channel) do
+        nil -> maybe_connect(endpoint, api_key, Keyword.get(opts, :connect, true))
+        channel -> channel
+      end
 
     %__MODULE__{
       channel: channel,
@@ -79,10 +81,22 @@ defmodule Xai.Client do
 
   def auth_metadata(_), do: []
 
+  defp maybe_connect(_endpoint, _api_key, false), do: nil
+
+  defp maybe_connect(endpoint, api_key, true) do
+    case connect(endpoint, api_key) do
+      {:ok, channel} ->
+        channel
+
+      {:error, reason} ->
+        raise "failed to connect to xAI gRPC endpoint #{endpoint}: #{inspect(reason)}"
+    end
+  end
+
   defp connect(endpoint, api_key) do
     cred =
       if String.ends_with?(endpoint, ":443") do
-        GRPC.Credential.new(ssl: [verify: :verify_none]) # adjust for prod if needed
+        GRPC.Credential.new(ssl: [verify: :verify_peer, cacerts: :public_key.cacerts_get()])
       else
         nil
       end
@@ -98,4 +112,3 @@ defmodule Xai.Client do
   defp auth_headers(nil), do: []
   defp auth_headers(key), do: [{"authorization", "Bearer #{key}"}]
 end
-

@@ -8,7 +8,7 @@ defmodule Xai.MixProject do
     [
       app: :xai,
       version: @version,
-      elixir: "~> 1.16",
+      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -24,7 +24,7 @@ defmodule Xai.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :inets, :ssl]
     ]
   end
 
@@ -33,7 +33,6 @@ defmodule Xai.MixProject do
       # gRPC support
       {:grpc, "~> 1.0"},
       {:gun, "~> 2.0", override: true},
-      {:grpc_server, "~> 1.0", only: [:dev, :test]}, # if we ever implement server parts
 
       # WebSocket support for realtime voice / TTS
       {:websockex, "~> 0.4"},

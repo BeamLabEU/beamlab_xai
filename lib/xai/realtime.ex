@@ -37,6 +37,7 @@ defmodule Xai.Realtime do
   @realtime_url "wss://api.x.ai/v1/realtime"
 
   defmodule State do
+    @moduledoc false
     defstruct [
       :api_key,
       :on_audio,
@@ -67,7 +68,7 @@ defmodule Xai.Realtime do
     voice = Keyword.get(opts, :voice, "eve")
     language = Keyword.get(opts, :language, "en")
     codec = Keyword.get(opts, :codec, "mp3")
-    sample_rate = Keyword.get(opts, :sample_rate, 24000)
+    sample_rate = Keyword.get(opts, :sample_rate, 24_000)
 
     query = URI.encode_query(
       language: language,
@@ -87,10 +88,7 @@ defmodule Xai.Realtime do
 
     extra_headers = [{"Authorization", "Bearer #{api_key}"}]
 
-    WebSockex.start_link(url, __MODULE__, state,
-      extra_headers: extra_headers,
-      name: via_tuple()
-    )
+    WebSockex.start_link(url, __MODULE__, state, extra_headers: extra_headers)
   end
 
   @doc """
@@ -147,26 +145,8 @@ defmodule Xai.Realtime do
   @impl true
   def handle_frame({:text, msg}, state) do
     case Jason.decode(msg) do
-      {:ok, %{"type" => "audio.delta", "delta" => b64}} ->
-        audio = Base.decode64!(b64)
-        if state.on_audio, do: state.on_audio.(audio)
-        if state.on_event, do: state.on_event.(%{"type" => "audio.delta"})
-        {:ok, state}
-
-      {:ok, %{"type" => "audio.done"} = event} ->
-        if state.on_event, do: state.on_event.(event)
-        {:ok, state}
-
-      {:ok, %{"type" => "error", "message" => msg}} ->
-        if state.on_event, do: state.on_event.(%{"type" => "error", "message" => msg})
-        {:close, state}
-
-      {:ok, event} ->
-        if state.on_event, do: state.on_event.(event)
-        {:ok, state}
-
-      _ ->
-        {:ok, state}
+      {:ok, event} -> handle_event(event, state)
+      _ -> {:ok, state}
     end
   end
 
@@ -174,6 +154,23 @@ defmodule Xai.Realtime do
   def handle_frame({:binary, data}, state) do
     # Some implementations send raw binary audio
     if state.on_audio, do: state.on_audio.(data)
+    {:ok, state}
+  end
+
+  defp handle_event(%{"type" => "audio.delta", "delta" => b64}, state) do
+    audio = Base.decode64!(b64)
+    if state.on_audio, do: state.on_audio.(audio)
+    if state.on_event, do: state.on_event.(%{"type" => "audio.delta"})
+    {:ok, state}
+  end
+
+  defp handle_event(%{"type" => "error", "message" => msg}, state) do
+    if state.on_event, do: state.on_event.(%{"type" => "error", "message" => msg})
+    {:close, state}
+  end
+
+  defp handle_event(event, state) do
+    if state.on_event, do: state.on_event.(event)
     {:ok, state}
   end
 
@@ -191,11 +188,6 @@ defmodule Xai.Realtime do
   def handle_info(:close, state) do
     {:close, state}
   end
-
-  defp via_tuple, do: {:via, Registry, {Xai.RealtimeRegistry, :default}}
-
-  # Optional: start a registry if you want named processes.
-  # For simplicity, this version uses direct pids.
 
   # --- Pure helpers for testing ---
 
