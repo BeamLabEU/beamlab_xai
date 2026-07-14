@@ -15,6 +15,7 @@ defmodule Xai.Chat do
   """
 
   alias XaiApi, as: Proto
+  alias XaiApi.Chat.Stub, as: ChatStub
 
   defstruct [:client, :model, messages: [], opts: []]
 
@@ -76,7 +77,7 @@ defmodule Xai.Chat do
 
     metadata = Xai.Client.auth_metadata(client)
 
-    Proto.Chat.Stub.get_completion(client.channel, request,
+    ChatStub.get_completion(client.channel, request,
       timeout: timeout,
       metadata: metadata
     )
@@ -107,7 +108,7 @@ defmodule Xai.Chat do
 
     metadata = Xai.Client.auth_metadata(client)
 
-    case Proto.Chat.Stub.get_completion_chunk(
+    case ChatStub.get_completion_chunk(
            client.channel,
            request,
            timeout: timeout,

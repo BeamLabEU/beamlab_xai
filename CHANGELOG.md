@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped minimum Elixir requirement from `~> 1.16` to `~> 1.18`.
 - Replaced direct `Jason` usage with the built-in `JSON` module (Elixir 1.18+) in `Xai.Realtime` and the integration test; dropped the direct `jason` dependency. `jason` still appears in `mix.lock` as a transitive dependency (`grpc_core`, `protobuf`, and `credo` each require it directly), but our own code no longer calls it.
 
+### Added
+- `mix quality`: a single gate that chains `format --check-formatted`, `compile --warnings-as-errors`, `deps.unlock --check-unused`, `credo --strict`, unit tests, and `dialyzer`. Run it before committing/pushing.
+- `mix quality.audit`: `mix hex.audit` as a separate, non-gating alias — it can fail for reasons outside this repo's control (an unpatched upstream CVE), so it isn't part of `mix quality`.
+- `.formatter.exs`, `.credo.exs` (both exclude the generated, gitignored `lib/xai/proto/`), and `.dialyzer_ignore.exs` (documents each currently-accepted dialyzer finding and why, so `mix dialyzer` is meaningful and green rather than permanently noisy).
+- Aliased `XaiApi.Chat.Stub`/`XaiApi.Video.Stub` in `Xai.Chat`/`Xai.Video` instead of reaching through the nested `Proto.Chat.Stub`/`Proto.Video.Stub` path, clearing Credo's strict-mode design suggestions.
+
 ## [0.1.0] - 2026-07-14
 
 ### Added

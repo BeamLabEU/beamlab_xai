@@ -70,12 +70,13 @@ defmodule Xai.Realtime do
     codec = Keyword.get(opts, :codec, "mp3")
     sample_rate = Keyword.get(opts, :sample_rate, 24_000)
 
-    query = URI.encode_query(
-      language: language,
-      voice: voice,
-      codec: codec,
-      sample_rate: sample_rate
-    )
+    query =
+      URI.encode_query(
+        language: language,
+        voice: voice,
+        codec: codec,
+        sample_rate: sample_rate
+      )
 
     url = "#{@tts_url}?#{query}"
 

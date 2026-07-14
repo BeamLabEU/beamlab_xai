@@ -30,12 +30,17 @@ Generated code lands in `lib/xai/proto/`. **Never commit these files** — they 
 
 | Command | Purpose |
 |---------|---------|
+| `mix quality` | **Run this before committing/pushing.** Chains format check, `compile --warnings-as-errors`, `deps.unlock --check-unused`, `credo --strict`, unit tests, and `dialyzer`. Must be green. |
+| `mix quality.audit` | Checks dependencies for known security advisories (`mix hex.audit`). Not part of `mix quality` — it can fail for reasons outside this repo's control (an unpatched CVE upstream); run it periodically, not as a commit gate. |
 | `mix test --exclude integration` | Run fast unit tests (default) |
 | `mix test --only integration` | Run live tests against the real API (requires `XAI_API_KEY`) |
 | `mix proto.generate` | Regenerate Elixir code from the xAI protos |
-| `mix credo --strict` | Run linting |
-| `mix dialyzer` | Run static type analysis |
+| `mix format` / `mix format --check-formatted` | Format / verify formatting (see `.formatter.exs` — `lib/xai/proto/` is intentionally excluded, it's generated) |
+| `mix credo --strict` | Run linting (`.credo.exs` excludes `lib/xai/proto/`) |
+| `mix dialyzer` | Run static type analysis (`.dialyzer_ignore.exs` documents the currently-accepted findings and why) |
 | `mix docs` | Build documentation |
+
+As of this writing, `mix quality.audit` reports advisories against `cowlib` (pulled in transitively via `gun`, used for gRPC's HTTP/2 transport) with no fixed release available yet — nothing to act on until upstream patches it. Re-check periodically.
 
 ### Running with a real key (local only)
 
@@ -98,7 +103,7 @@ High-level modules (`Xai.Chat`, `Xai.Video`, etc.) wrap the generated `XaiApi.*`
 1. Run `mix proto.generate` if you touched anything related to protobufs.
 2. Add or update unit tests that do **not** require a key.
 3. Tag any new live tests with `@tag :integration`.
-4. Run `mix test --exclude integration` before committing.
+4. Run `mix quality` before committing.
 5. Update the README when changing public API or setup steps.
 6. Keep the library close to the Python SDK's mental model where it makes sense.
 
@@ -108,6 +113,9 @@ High-level modules (`Xai.Chat`, `Xai.Video`, etc.) wrap the generated `XaiApi.*`
 - `priv/protos/README.md` — notes on the proto submodule
 - `test/test_helper.exs` — test setup and Mox mocks
 - `scripts/test_with_key.sh` — local helper (gitignored)
+- `.formatter.exs` — formatter input globs (excludes generated `lib/xai/proto/`)
+- `.credo.exs` — lint config (excludes generated `lib/xai/proto/`)
+- `.dialyzer_ignore.exs` — documented, accepted dialyzer findings; each entry explains why
 
 ## Questions to Ask Before Coding
 

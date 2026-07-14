@@ -15,7 +15,8 @@ defmodule Xai.MixProject do
       description: "Native Elixir gRPC client for the xAI API (Grok)",
       package: package(),
       docs: docs(),
-      aliases: aliases()
+      aliases: aliases(),
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"]
     ]
   end
 
@@ -26,6 +27,11 @@ defmodule Xai.MixProject do
     [
       extra_applications: [:logger, :inets, :ssl]
     ]
+  end
+
+  # `mix quality` chains `mix test`, so it must run under MIX_ENV=test.
+  def cli do
+    [preferred_envs: [quality: :test, "quality.audit": :test]]
   end
 
   defp deps do
@@ -77,7 +83,21 @@ defmodule Xai.MixProject do
   defp aliases do
     [
       "proto.generate": ["protobuf.generate"],
-      setup: ["deps.get", "proto.generate"]
+      setup: ["deps.get", "proto.generate"],
+      # The required gate: keep this green before committing/pushing.
+      # Ordered cheapest-and-most-likely-to-fail first so it fails fast.
+      quality: [
+        "format --check-formatted",
+        "compile --warnings-as-errors --force",
+        "deps.unlock --check-unused",
+        "credo --strict",
+        "test --exclude integration",
+        "dialyzer"
+      ],
+      # Separate from `quality` because it can fail for reasons outside our
+      # control (an unpatched CVE in a transitive dependency) — run it
+      # periodically rather than gating every commit on it.
+      "quality.audit": ["hex.audit"]
     ]
   end
 end

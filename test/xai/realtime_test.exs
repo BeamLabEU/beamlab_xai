@@ -62,16 +62,20 @@ defmodule Xai.RealtimeTest do
       }
 
       b64 = Base.encode64("fake-audio-bytes")
-      {:ok, new_state} = Xai.Realtime.handle_frame({:text, ~s({"type":"audio.delta","delta":"#{b64}"})}, state)
+
+      {:ok, new_state} =
+        Xai.Realtime.handle_frame({:text, ~s({"type":"audio.delta","delta":"#{b64}"})}, state)
 
       assert :ets.lookup(audio_received, :audio) == [{:audio, "fake-audio-bytes"}]
-      assert new_state == state  # state unchanged besides side effect
+      # state unchanged besides side effect
+      assert new_state == state
     end
 
     test "handles audio.done" do
       state = %Xai.Realtime.State{on_event: fn e -> send(self(), e) end}
 
-      {:ok, _} = Xai.Realtime.handle_frame({:text, ~s({"type":"audio.done","trace_id":"abc123"})}, state)
+      {:ok, _} =
+        Xai.Realtime.handle_frame({:text, ~s({"type":"audio.done","trace_id":"abc123"})}, state)
 
       assert_received %{"type" => "audio.done", "trace_id" => "abc123"}
     end

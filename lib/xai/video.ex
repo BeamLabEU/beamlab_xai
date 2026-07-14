@@ -7,6 +7,7 @@ defmodule Xai.Video do
   """
 
   alias XaiApi, as: Proto
+  alias XaiApi.Video.Stub, as: VideoStub
 
   @doc """
   Generate a video.
@@ -26,14 +27,17 @@ defmodule Xai.Video do
     request = %Proto.GenerateVideoRequest{
       prompt: Keyword.fetch!(opts, :prompt),
       model: Keyword.get(opts, :model, "grok-imagine-video"),
-      duration: Keyword.get(opts, :duration),
+      duration: Keyword.get(opts, :duration)
       # aspect_ratio and resolution are enums in the proto
       # for simplicity we can pass atoms or integers; the generator handles some
     }
 
     metadata = Xai.Client.auth_metadata(client)
 
-    case Proto.Video.Stub.generate_video(client.channel, request, timeout: timeout, metadata: metadata) do
+    case VideoStub.generate_video(client.channel, request,
+           timeout: timeout,
+           metadata: metadata
+         ) do
       {:ok, %Proto.StartDeferredResponse{request_id: rid}} when is_binary(rid) ->
         poll_for_video(client, rid, timeout)
 
@@ -56,11 +60,12 @@ defmodule Xai.Video do
 
     metadata = Xai.Client.auth_metadata(client)
 
-    case Proto.Video.Stub.extend_video(client.channel, request, metadata: metadata) do
+    case VideoStub.extend_video(client.channel, request, metadata: metadata) do
       {:ok, %Proto.StartDeferredResponse{request_id: rid}} ->
         poll_for_video(client, rid, Xai.Client.default_timeout(client))
 
-      other -> other
+      other ->
+        other
     end
   end
 
@@ -74,7 +79,10 @@ defmodule Xai.Video do
     req = %Proto.GetDeferredVideoRequest{request_id: request_id}
     metadata = Xai.Client.auth_metadata(client)
 
-    case Proto.Video.Stub.get_deferred_video(client.channel, req, timeout: timeout, metadata: metadata) do
+    case VideoStub.get_deferred_video(client.channel, req,
+           timeout: timeout,
+           metadata: metadata
+         ) do
       {:ok, %Proto.GetDeferredVideoResponse{status: :DONE, response: resp}} ->
         {:ok, resp}
 
@@ -85,7 +93,8 @@ defmodule Xai.Video do
         Process.sleep(1500)
         poll_for_video(client, request_id, timeout, attempts - 1)
 
-      err -> err
+      err ->
+        err
     end
   end
 end
