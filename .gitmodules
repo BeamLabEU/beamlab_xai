@@ -1,0 +1,3 @@
+[submodule "priv/xai_proto"]
+	path = priv/xai_proto
+	url = https://github.com/xai-org/xai-proto

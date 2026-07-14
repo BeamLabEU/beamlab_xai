@@ -1,0 +1,26 @@
+# Elixir
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+xai-*.tar
+xai-*.tar.gz
+
+# Generated protobuf code (do not commit the generated Elixir modules)
+lib/xai/proto/
+
+# Protos source is via git submodule (priv/xai_proto is tracked via .gitmodules)
+# Do NOT ignore the submodule directory itself.
+
+# IDE / OS
+.idea/
+*.swp
+.DS_Store
+.env
+.env.*
+
+# Local test scripts containing real credentials (do not commit!)
+scripts/test_with_key.sh
