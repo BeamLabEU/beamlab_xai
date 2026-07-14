@@ -1,7 +1,7 @@
 defmodule Xai.MixProject do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.2.0"
   @source_url "https://github.com/beamlab-xai/xai"
 
   # The xai-proto v1 files actually used by Xai.Chat / Xai.Video (+ documents.proto,
@@ -52,7 +52,17 @@ defmodule Xai.MixProject do
     [
       # gRPC support
       {:grpc, "~> 1.0"},
-      {:gun, "~> 2.0"},
+      # Both HTTP/2 adapters are optional, matching `grpc`'s own upstream
+      # pattern (see GRPC.Client.Adapters.Gun / .Mint) — a consumer using
+      # only `Xai.Realtime` (WebSocket, via websockex) needs neither, and
+      # a consumer using `Xai.Chat`/`Xai.Video` picks one by adding it to
+      # their own deps and passing `adapter:` to `Xai.Client.new/1` (Gun
+      # remains the default when unspecified — add `{:gun, "~> 2.0"}` to
+      # keep the pre-0.2 default behavior; `{:mint, "~> 1.9"}` avoids
+      # `:cowlib` entirely). This repo lists both (below) so its own
+      # tests/dialyzer exercise both adapters.
+      {:gun, "~> 2.0", optional: true},
+      {:mint, "~> 1.9", optional: true},
 
       # WebSocket support for realtime voice / TTS
       {:websockex, "~> 0.4"},

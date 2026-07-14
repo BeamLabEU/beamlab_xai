@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-14
+
+### Changed
+- **`:gun` is now an optional dependency; `:mint` is a new optional alternative.** Previously `xai` hard-required `gun` (and its transitive `cowlib` dependency) for every consumer, even ones that only use `Xai.Realtime` (WebSocket, via `websockex` — no gun/cowlib involved at all). `Xai.Client.new/1` now accepts an `:adapter` option threaded through to `GRPC.Stub.connect/2` (mirrors `grpc`'s own `GRPC.Client.Adapters.Gun` / `.Mint` split); Gun remains the default when unspecified for backward compatibility.
+  - **Breaking for `Xai.Chat` / `Xai.Video` users**: add `{:gun, "~> 2.0"}` to your own `mix.exs` to keep the previous default behavior (it's no longer pulled in transitively). Or add `{:mint, "~> 1.9"}` and pass `adapter: GRPC.Client.Adapters.Mint` — Mint has no `:cowlib` in its dependency tree at all.
+  - **No change needed for `Xai.Realtime`-only users** (e.g. streaming TTS) — that path never depended on gun/cowlib and still doesn't.
+
 ## [0.1.1] - 2026-07-14
 
 ### Fixed

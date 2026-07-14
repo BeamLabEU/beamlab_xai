@@ -21,6 +21,13 @@ defmodule Xai.Client do
   * `:endpoint` - default "api.x.ai:443"
   * `:ssl` - whether to use TLS for the gRPC connection, default `true`
   * `:timeout` - default 30 minutes
+  * `:adapter` - the `GRPC.Stub` transport adapter, default `GRPC.Client.Adapters.Gun`.
+    Both `:gun` and `:mint` are optional dependencies of this package — add
+    whichever one you actually use to your own `mix.exs`. Pass
+    `adapter: GRPC.Client.Adapters.Mint` to use Mint instead of Gun (no
+    `:cowlib` in its dependency tree). Callers who only use `Xai.Realtime`
+    (WebSocket, via `websockex`) never call `Xai.Client.new/1` at all and
+    need neither `:gun` nor `:mint`.
   """
 
   defstruct [:channel, :api_key, :management_api_key, :endpoint, :timeout]
@@ -35,6 +42,7 @@ defmodule Xai.Client do
 
   @default_endpoint "api.x.ai:443"
   @default_timeout :timer.minutes(30)
+  @default_adapter GRPC.Client.Adapters.Gun
 
   @doc """
   Create a new client.
@@ -52,10 +60,11 @@ defmodule Xai.Client do
     endpoint = Keyword.get(opts, :endpoint, @default_endpoint)
     timeout = Keyword.get(opts, :timeout, @default_timeout)
     ssl = Keyword.get(opts, :ssl, true)
+    adapter = Keyword.get(opts, :adapter, @default_adapter)
 
     channel =
       case Keyword.get(opts, :channel) do
-        nil -> maybe_connect(endpoint, api_key, ssl, Keyword.get(opts, :connect, true))
+        nil -> maybe_connect(endpoint, api_key, ssl, adapter, Keyword.get(opts, :connect, true))
         channel -> channel
       end
 
@@ -83,10 +92,10 @@ defmodule Xai.Client do
 
   def auth_metadata(_), do: []
 
-  defp maybe_connect(_endpoint, _api_key, _ssl, false), do: nil
+  defp maybe_connect(_endpoint, _api_key, _ssl, _adapter, false), do: nil
 
-  defp maybe_connect(endpoint, api_key, ssl, true) do
-    case connect(endpoint, api_key, ssl) do
+  defp maybe_connect(endpoint, api_key, ssl, adapter, true) do
+    case connect(endpoint, api_key, ssl, adapter) do
       {:ok, channel} ->
         channel
 
@@ -95,7 +104,7 @@ defmodule Xai.Client do
     end
   end
 
-  defp connect(endpoint, api_key, ssl) do
+  defp connect(endpoint, api_key, ssl, adapter) do
     cred =
       if ssl do
         GRPC.Credential.new(ssl: [verify: :verify_peer, cacerts: :public_key.cacerts_get()])
@@ -105,6 +114,7 @@ defmodule Xai.Client do
 
     opts = [
       cred: cred,
+      adapter: adapter,
       headers: auth_headers(api_key)
     ]
 

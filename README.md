@@ -23,10 +23,26 @@ This library aims to closely follow the official [Python xai-sdk](https://github
 
 ## Installation
 
+If you only use `Xai.Realtime` (streaming TTS / voice agent, over WebSocket):
+
 ```elixir
 def deps do
   [
-    {:xai, "~> 0.1"}
+    {:xai, "~> 0.2"}
+  ]
+end
+```
+
+If you use `Xai.Chat` / `Xai.Video` (gRPC), also add an HTTP/2 adapter —
+`gun` (the default) or `mint` (no `:cowlib` in its dependency tree):
+
+```elixir
+def deps do
+  [
+    {:xai, "~> 0.2"},
+    {:gun, "~> 2.0"}
+    # or: {:mint, "~> 1.9"}, then pass adapter: GRPC.Client.Adapters.Mint
+    # to Xai.Client.new/1
   ]
 end
 ```
