@@ -36,8 +36,8 @@ everything below (including the initial implementation) is folded into it.
 - `Xai.Chat.stream/2` no longer crashes: it was calling `GRPC.Stub.recv/2` in a polling loop
   against a value that gRPC's server-streaming API already resolves to `{:ok, Enumerable.t()}`
   before it's returned, so `recv/2` had no matching clause and would raise.
-- `Xai.Video.poll_for_video/4` was checking `if attempts <= 0, do: {:error, :timeout}` without
-  an `else`; the result was discarded and the retry budget was never actually enforced.
+- `Xai.Video`'s private `poll_for_video/4` was checking `if attempts <= 0, do: {:error, :timeout}`
+  without an `else`; the result was discarded and the retry budget was never actually enforced.
   Rewritten as pattern-matched function heads.
 - `Xai.Client.new/1` silently swallowed gRPC connection failures via `elem(connect(...), 1)`;
   a failed connect now raises with the real error instead of storing it as a bogus channel.
@@ -73,7 +73,7 @@ everything below (including the initial implementation) is folded into it.
   `Xai.Realtime` and the integration test; dropped the direct `jason` dependency. `jason`
   still appears in `mix.lock` as a transitive dependency (`grpc_core`, `protobuf`, and
   `credo` each require it directly), but our own code no longer calls it.
-- Aliased `XaiApi.Chat.Stub`/`XaiApi.Video.Stub` in `Xai.Chat`/`Xai.Video` instead of reaching
+- Aliased the generated gRPC stub modules locally in `Xai.Chat`/`Xai.Video` instead of reaching
   through the nested `Proto.Chat.Stub`/`Proto.Video.Stub` path, clearing Credo's strict-mode
   design suggestions.
 
