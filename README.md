@@ -16,18 +16,10 @@ This library aims to closely follow the official [Python xai-sdk](https://github
 ### Current
 
 - ✅ `Xai.Client`
-- ✅ `Xai.Chat` (create / append / sample)
+- ✅ `Xai.Chat` (create / append / sample / stream)
 - ✅ `Xai.Video.generate/2` and `extend/2` (auto-polling)
-- ⏳ Full protobuf generation + richer message types + streaming + Collections
-
-**Important**: Add the submodule and run generation to use real generated code instead of the current simulated protos:
-
-```bash
-git submodule add https://github.com/xai-org/xai-proto priv/xai_proto
-git submodule update --init --recursive
-mix deps.get
-mix protobuf.generate
-```
+- ✅ Real generated protobuf bindings for chat, video, image, sample, usage, deferred, and documents
+- ⏳ auth, batch, embed, files, models, tokenize (need `google/rpc/status.proto`, not yet vendored) + Collections
 
 ## Installation
 
@@ -48,11 +40,12 @@ client = Xai.Client.new(api_key: System.get_env("XAI_API_KEY"))
 chat = Xai.Chat.create(client, model: "grok-4.5")
 chat = Xai.Chat.append(chat, Xai.Chat.user("Explain quantum computing in one sentence."))
 {:ok, response} = Xai.Chat.sample(chat)
-IO.puts(response.content)
+[%{message: %{content: content}} | _] = response.outputs
+IO.puts(content)
 
 # Chat streaming (gRPC)
 Xai.Chat.stream(chat)
-|> Stream.each(fn chunk -> IO.write(extract_text(chunk)) end)
+|> Stream.each(fn chunk -> IO.write(Xai.Chat.extract_delta(chunk)) end)
 |> Stream.run()
 
 # Video (automatic polling, like the Python SDK)
@@ -131,10 +124,9 @@ mix test --only integration
 
 ## Development
 
-### 1. Fetch the official protos
+### 1. Fetch the official protos (submodule)
 
 ```bash
-git submodule add https://github.com/xai-org/xai-proto priv/xai_proto
 git submodule update --init --recursive
 ```
 
@@ -142,11 +134,16 @@ git submodule update --init --recursive
 
 ```bash
 mix deps.get
-mix protobuf.generate
+mix proto.generate
 ```
+
+`mix proto.generate` compiles the proto files listed in `@proto_files` in
+`mix.exs` — see `AGENTS.md` for details and current coverage.
+
+Run `mix quality` before committing — see `AGENTS.md` for what it checks.
 
 See the [Testing](#testing) section above for how to run the test suite.
 
 ## License
 
-Apache-2.0 (same as the official SDK and protos).
+Apache-2.0 (same as the official SDK and protos). See [LICENSE](LICENSE).

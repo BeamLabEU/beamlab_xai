@@ -4,6 +4,20 @@ defmodule Xai.MixProject do
   @version "0.1.0"
   @source_url "https://github.com/beamlab-xai/xai"
 
+  # The xai-proto v1 files actually used by Xai.Chat / Xai.Video (+ documents.proto,
+  # which chat.proto's CollectionsSearch depends on). auth/batch/embed/files/models/
+  # tokenize aren't generated yet — they additionally need google/rpc/status.proto,
+  # which isn't vendored anywhere in this repo yet.
+  @proto_files ~w(
+    xai/api/v1/chat.proto
+    xai/api/v1/video.proto
+    xai/api/v1/image.proto
+    xai/api/v1/sample.proto
+    xai/api/v1/usage.proto
+    xai/api/v1/deferred.proto
+    xai/api/v1/documents.proto
+  )
+
   def project do
     [
       app: :xai,
@@ -38,7 +52,7 @@ defmodule Xai.MixProject do
     [
       # gRPC support
       {:grpc, "~> 1.0"},
-      {:gun, "~> 2.0", override: true},
+      {:gun, "~> 2.0"},
 
       # WebSocket support for realtime voice / TTS
       {:websockex, "~> 0.4"},
@@ -68,21 +82,35 @@ defmodule Xai.MixProject do
         "GitHub" => @source_url,
         "xAI Docs" => "https://docs.x.ai/",
         "Python SDK" => "https://github.com/xai-org/xai-sdk-python"
-      }
+      },
+      # Explicit allowlist: Hex's default ["lib", "priv", ...] would otherwise
+      # sweep in priv/xai_proto, the ~160KB vendored xai-proto git submodule
+      # (raw .proto sources, buf tooling, CI configs) that consumers of the
+      # compiled package have no use for.
+      files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
     ]
   end
 
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"],
+      extras: ["README.md", "CHANGELOG.md"],
       source_url: @source_url
     ]
   end
 
   defp aliases do
     [
-      "proto.generate": ["protobuf.generate"],
+      # `protobuf_generate` 0.2.1's `protobuf.generate` task takes CLI flags,
+      # not a config file — there is no `.protobuf.exs` to read. This is the
+      # single source of truth for how xai-proto gets compiled; update
+      # @proto_files above to add coverage.
+      "proto.generate": [
+        "protobuf.generate --include-path=priv/xai_proto/proto " <>
+          "--plugin=ProtobufGenerate.Plugins.GRPCWithOptions " <>
+          "--output-path=lib/xai/proto " <>
+          Enum.join(@proto_files, " ")
+      ],
       setup: ["deps.get", "proto.generate"],
       # The required gate: keep this green before committing/pushing.
       # Ordered cheapest-and-most-likely-to-fail first so it fails fast.

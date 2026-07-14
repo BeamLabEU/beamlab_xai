@@ -21,10 +21,22 @@ git submodule update --init --recursive
 
 ```bash
 mix deps.get
-mix proto.generate          # alias for `mix protobuf.generate`
+mix proto.generate
 ```
 
-Generated code lands in `lib/xai/proto/`. **Never commit these files** — they are gitignored.
+`mix proto.generate` compiles the `@proto_files` list in `mix.exs` (currently:
+chat, video, image, sample, usage, deferred, documents — the set `Xai.Chat` /
+`Xai.Video` actually use) via `mix protobuf.generate` with the right
+`--include-path`/`--plugin`/`--output-path` flags. There is no
+`.protobuf.exs` — the installed `protobuf_generate` version reads CLI flags
+only, not a config file, so the alias in `mix.exs` is the single source of
+truth. auth/batch/embed/files/models/tokenize proto files aren't covered yet;
+they additionally need `google/rpc/status.proto`, which isn't vendored here.
+
+Generated code lands in `lib/xai/proto/`. **Never commit these files** — they
+are gitignored in the git repo. They **are** included when publishing to Hex
+(see `package[:files]` in `mix.exs`) — run `mix proto.generate` before
+`mix hex.publish` so the tarball ships real bindings, not stale ones.
 
 ## Common Commands
 
@@ -56,8 +68,9 @@ Use the gitignored helper:
 ## Important Rules
 
 ### Do not commit generated code
-- `lib/xai/proto/` must stay gitignored.
-- Always run `mix proto.generate` after pulling changes or modifying `.protobuf.exs`.
+- `lib/xai/proto/` must stay gitignored in git.
+- Always run `mix proto.generate` after pulling changes, or after editing `@proto_files` in `mix.exs`.
+- Before `mix hex.publish`, regenerate first — Hex packages from the working directory, not git, so a stale or missing `lib/xai/proto/` ships stale or broken code.
 
 ### Do not commit secrets
 - `scripts/test_with_key.sh` is intentionally gitignored.
@@ -109,7 +122,6 @@ High-level modules (`Xai.Chat`, `Xai.Video`, etc.) wrap the generated `XaiApi.*`
 
 ## Useful Files
 
-- `.protobuf.exs` — configuration for protobuf code generation
 - `priv/protos/README.md` — notes on the proto submodule
 - `test/test_helper.exs` — test setup and Mox mocks
 - `scripts/test_with_key.sh` — local helper (gitignored)
