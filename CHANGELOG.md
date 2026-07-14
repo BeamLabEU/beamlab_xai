@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped the unused `grpc_server` dependency (and its transitive `flow`/`gen_stage`/`cowboy` tree), added for a server-side feature that was never implemented.
 - Added `:inets` and `:ssl` to `extra_applications` (needed by the integration test's `:httpc` call and by TLS gRPC connections).
 - Bumped minimum Elixir requirement from `~> 1.16` to `~> 1.18`.
+- Replaced direct `Jason` usage with the built-in `JSON` module (Elixir 1.18+) in `Xai.Realtime` and the integration test; dropped the direct `jason` dependency. `jason` still appears in `mix.lock` as a transitive dependency (`grpc_core`, `protobuf`, and `credo` each require it directly), but our own code no longer calls it.
 
 ## [0.1.0] - 2026-07-14
 

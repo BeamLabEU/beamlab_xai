@@ -119,19 +119,19 @@ defmodule Xai.Realtime do
   @doc "Send a text delta for TTS or conversation."
   def send_text(pid, text) do
     msg = %{"type" => "text.delta", "delta" => text}
-    WebSockex.send_frame(pid, {:text, Jason.encode!(msg)})
+    WebSockex.send_frame(pid, {:text, JSON.encode!(msg)})
   end
 
   @impl Xai.RealtimeBehaviour
   @doc "Signal end of text for current utterance (TTS)."
   def send_text_done(pid) do
-    WebSockex.send_frame(pid, {:text, Jason.encode!(%{"type" => "text.done"})})
+    WebSockex.send_frame(pid, {:text, JSON.encode!(%{"type" => "text.done"})})
   end
 
   @impl Xai.RealtimeBehaviour
   @doc "Send raw event (for advanced realtime use)."
   def send_event(pid, event) when is_map(event) do
-    WebSockex.send_frame(pid, {:text, Jason.encode!(event)})
+    WebSockex.send_frame(pid, {:text, JSON.encode!(event)})
   end
 
   @impl Xai.RealtimeBehaviour
@@ -144,7 +144,7 @@ defmodule Xai.Realtime do
 
   @impl true
   def handle_frame({:text, msg}, state) do
-    case Jason.decode(msg) do
+    case JSON.decode(msg) do
       {:ok, event} -> handle_event(event, state)
       _ -> {:ok, state}
     end

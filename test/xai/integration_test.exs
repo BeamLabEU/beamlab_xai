@@ -28,16 +28,16 @@ defmodule Xai.IntegrationTest do
       {~c"authorization", ~c"Bearer #{api_key}"},
       {~c"content-type", ~c"application/json"}
     ]
-    body = Jason.encode!(%{
+    body = JSON.encode!(%{
       model: "grok-4.20-0309-non-reasoning",
       messages: [%{role: "user", content: "Reply with exactly: PONG"}],
       max_tokens: 10
     })
 
     {:ok, {{_, 200, _}, _headers, response_body}} =
-      :httpc.request(:post, {url, headers, ~c"application/json", body}, [], [])
+      :httpc.request(:post, {url, headers, ~c"application/json", body}, [], body_format: :binary)
 
-    response = Jason.decode!(response_body)
+    response = JSON.decode!(response_body)
     content = get_in(response, ["choices", Access.at(0), "message", "content"])
     assert content == "PONG"
   end

@@ -36,7 +36,6 @@ defmodule Xai.MixProject do
 
       # WebSocket support for realtime voice / TTS
       {:websockex, "~> 0.4"},
-      {:jason, "~> 1.4"},
 
       # Protobuf support and generation
       {:protobuf, "~> 0.17"},
