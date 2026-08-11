@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.1 - 2026-08-11
+
+### Fixed
+
+- **Dialyzer no longer reports `unknown_type` for the gRPC channel.** grpc
+  1.0.3 dropped the `@type t` from `GRPC.Channel`, leaving only the
+  `defstruct`, so `GRPC.Channel.t()` stopped resolving. `Xai.Client` now
+  declares its own `grpc_channel/0` type for the struct instead of depending on
+  the dependency to re-declare one.
+
+- **Removed a stale entry from `.dialyzer_ignore.exs`.** It suppressed a
+  "pattern can never match" warning caused by `GRPC.Stub.connect/2`'s success
+  typing in grpc 1.0.2, which 1.0.3 fixes — dialyzer now reports the entry
+  itself as an unnecessary skip. A stale ignore is one that will eventually
+  silence a real warning matching the same string.
+
+### Changed
+
+- Dependency updates (`grpc` 1.0.3, `grpc_core` 1.0.3, `mint` 1.9.3).
+
 ## [Unreleased]
 
 ## [0.2.0] - 2026-07-14

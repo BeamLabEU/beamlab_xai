@@ -32,8 +32,19 @@ defmodule Xai.Client do
 
   defstruct [:channel, :api_key, :management_api_key, :endpoint, :timeout]
 
+  @typedoc """
+  A connected gRPC channel.
+
+  Declared here as the struct rather than reusing `GRPC.Channel.t()`: grpc
+  1.0.3 dropped the `@type t` from that module, leaving only the `defstruct`,
+  so the named type no longer resolves and dialyzer reports `unknown_type`.
+  Naming it locally says the same thing without depending on the dependency
+  re-declaring it, and keeps the struct out of the `@spec`s themselves.
+  """
+  @type grpc_channel :: %GRPC.Channel{}
+
   @type t :: %__MODULE__{
-          channel: GRPC.Channel.t(),
+          channel: grpc_channel(),
           api_key: String.t() | nil,
           management_api_key: String.t() | nil,
           endpoint: String.t(),
@@ -78,7 +89,7 @@ defmodule Xai.Client do
   end
 
   @doc "Get the raw gRPC channel (for advanced use or direct stub calls)."
-  @spec channel(t()) :: GRPC.Channel.t()
+  @spec channel(t()) :: grpc_channel()
   def channel(%__MODULE__{channel: ch}), do: ch
 
   @doc "Get the configured default timeout."
