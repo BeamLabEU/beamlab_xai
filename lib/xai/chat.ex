@@ -69,15 +69,15 @@ defmodule Xai.Chat do
   Send the messages and get a full response.
 
   Returns the generated `GetChatCompletionResponse` protobuf struct.
+
+  Pass `safety_identifier:` (here or to `create/2`) to send an end-user
+  identifier for abuse monitoring.
   """
   @spec sample(t(), keyword()) :: {:ok, struct()} | {:error, term()}
-  def sample(%__MODULE__{client: client, model: model, messages: messages}, opts \\ []) do
+  def sample(%__MODULE__{client: client} = chat, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, Xai.Client.default_timeout(client))
 
-    request = %Proto.GetCompletionsRequest{
-      model: model,
-      messages: messages
-    }
+    request = build_request(chat, opts)
 
     metadata = Xai.Client.auth_metadata(client)
 
@@ -85,6 +85,16 @@ defmodule Xai.Chat do
       timeout: timeout,
       metadata: metadata
     )
+  end
+
+  @doc false
+  @spec build_request(t(), keyword()) :: Proto.GetCompletionsRequest.t()
+  def build_request(%__MODULE__{model: model, messages: messages, opts: chat_opts}, opts \\ []) do
+    %Proto.GetCompletionsRequest{
+      model: model,
+      messages: messages,
+      safety_identifier: Keyword.get(opts, :safety_identifier, chat_opts[:safety_identifier])
+    }
   end
 
   @doc """
@@ -102,13 +112,10 @@ defmodule Xai.Chat do
       |> Stream.run()
   """
   @spec stream(t(), keyword()) :: Enumerable.t()
-  def stream(%__MODULE__{client: client, model: model, messages: messages}, opts \\ []) do
+  def stream(%__MODULE__{client: client} = chat, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, Xai.Client.default_timeout(client))
 
-    request = %Proto.GetCompletionsRequest{
-      model: model,
-      messages: messages
-    }
+    request = build_request(chat, opts)
 
     metadata = Xai.Client.auth_metadata(client)
 

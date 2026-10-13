@@ -31,5 +31,18 @@ defmodule Xai.ChatTest do
       assert session.model == "grok-4.5"
       assert length(session.messages) == 2
     end
+
+    test "build_request/2 sends safety_identifier from create/2 or per call" do
+      client = %Xai.Client{api_key: "test"}
+      session = Chat.create(client, model: "grok-4.5", safety_identifier: "user-1")
+
+      assert Chat.build_request(session).safety_identifier == "user-1"
+
+      assert Chat.build_request(session, safety_identifier: "user-2").safety_identifier ==
+               "user-2"
+
+      plain = Chat.create(client, model: "grok-4.5")
+      assert Chat.build_request(plain).safety_identifier == nil
+    end
   end
 end

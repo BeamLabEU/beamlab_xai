@@ -1,7 +1,7 @@
 defmodule Xai.MixProject do
   use Mix.Project
 
-  @version "0.2.2"
+  @version "0.3.0"
   @source_url "https://github.com/beamlab-xai/xai"
 
   # The xai-proto v1 files actually used by Xai.Chat / Xai.Video (+ documents.proto,

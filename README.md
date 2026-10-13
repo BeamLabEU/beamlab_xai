@@ -65,12 +65,24 @@ Xai.Chat.stream(chat)
 |> Stream.run()
 
 # Video (automatic polling, like the Python SDK)
-{:ok, video} = Xai.Video.generate(client,
+{:ok, resp} = Xai.Video.generate(client,
   prompt: "A serene lake at sunrise",
   model: "grok-imagine-video",
   duration: 5
 )
-IO.puts(video.url)
+IO.puts(resp.video.url)
+
+# Option names follow the Python SDK (see the `Xai.Video` docs for the full list)
+{:ok, resp} = Xai.Video.generate(client,
+  prompt: "The cat jumps off the skateboard",
+  image_url: "https://example.com/cat.png",
+  last_frame_url: "https://example.com/landing.png",
+  keyframes: [%{image_url: "https://example.com/mid-air.png", timestamp: 2.5}],
+  resolution: "1080p",
+  aspect_ratio: "16:9",
+  generate_audio: true,
+  storage_options: %{filename: "cat.mp4", public_url: true}
+)
 ```
 
 ## WebSocket / Realtime (TTS & Voice)

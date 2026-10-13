@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 - 2026-10-13
+
+### Added
+
+- **`Xai.Video.generate/2` exposes the full request**, with option names taken
+  from the Python SDK: `:image_url` / `:image_file_id`, `:last_frame_url` /
+  `:last_frame_file_id`, `:keyframes`, `:video_url` / `:video_file_id`,
+  `:reference_image_urls` / `:reference_image_file_ids`, `:reference_audios`,
+  `:generate_audio` and `:storage_options`. Passing both halves of a URL/file-id
+  pair raises `ArgumentError`.
+- **`Xai.Video.extend/2`** accepts `:video_file_id`, `:duration` and
+  `:storage_options`.
+- **`:aspect_ratio` and `:resolution` accept the SDK's string forms**
+  (`"16:9"`, `"1080p"`) as well as the proto enum atoms.
+- **`safety_identifier`** for `Xai.Chat.sample/2` and `stream/2`, per call or
+  via `Xai.Chat.create/2`.
+
 ## 0.2.2 - 2026-10-13
 
 ### Fixed
@@ -48,8 +65,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Dependency updates (`grpc` 1.0.3, `grpc_core` 1.0.3, `mint` 1.9.3).
-
-## [Unreleased]
 
 ## [0.2.0] - 2026-07-14
 
