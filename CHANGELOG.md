@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`Xai.Video.build_extend_request/1` builds the new `VideoUrlContent`
+- **`Xai.Video`'s extend-request builder uses the new `VideoUrlContent`
   shape.** Upstream turned `VideoUrlContent.url` into a `oneof source` (with a
   new `file_id` alternative), so the struct no longer has a `url` field; the
   request now sets `source: {:url, video_url}`.
@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Xai.Realtime.close/1` no longer crashes the connection process: no `handle_cast/2`
   clause was defined for the `:close` cast it sends, so it fell through to
   `use WebSockex`'s default (raising) implementation. Added the missing clause.
-- `Xai.Realtime.handle_disconnect/2` no longer unconditionally reconnects. It now
+- `Xai.Realtime`'s `handle_disconnect` callback no longer unconditionally reconnects. It now
   terminates cleanly on a locally-initiated close (`close/1`, or the internal
   "error" event handler) and applies capped exponential backoff (500ms up to 30s,
   giving up after 5 attempts) on genuine remote/error disconnects, instead of
@@ -80,10 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicit `:ssl` option, defaulting to `true`.
 
 ### Added
-- Test coverage for `Xai.Realtime.handle_cast/2` (`:close`) and `handle_disconnect/2`
+- Test coverage for `Xai.Realtime`'s `handle_cast` (`:close`) and `handle_disconnect` callbacks
   (local-close termination, reconnect, and attempt-cap termination), previously
   untested.
-- `Xai.Video.build_generate_request/1` and `build_extend_request/1` extracted as
+- `Xai.Video`'s generate- and extend-request builders extracted as
   testable helpers, with tests covering the `:aspect_ratio`/`:resolution` fix above
   (`test/xai/video_test.exs` was previously a placeholder with no real assertions).
 

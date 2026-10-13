@@ -65,8 +65,12 @@ defmodule Xai.Chat do
     }
   end
 
-  @doc "Send the messages and get a full response."
-  @spec sample(t(), keyword()) :: {:ok, Proto.GetChatCompletionResponse.t()} | {:error, term()}
+  @doc """
+  Send the messages and get a full response.
+
+  Returns the generated `GetChatCompletionResponse` protobuf struct.
+  """
+  @spec sample(t(), keyword()) :: {:ok, struct()} | {:error, term()}
   def sample(%__MODULE__{client: client, model: model, messages: messages}, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, Xai.Client.default_timeout(client))
 
