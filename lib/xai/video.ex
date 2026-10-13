@@ -75,7 +75,7 @@ defmodule Xai.Video do
     %Proto.ExtendVideoRequest{
       prompt: Keyword.fetch!(opts, :prompt),
       model: Keyword.get(opts, :model),
-      video: %Proto.VideoUrlContent{url: Keyword.fetch!(opts, :video_url)}
+      video: %Proto.VideoUrlContent{source: {:url, Keyword.fetch!(opts, :video_url)}}
     }
   end
 

@@ -51,7 +51,7 @@ defmodule Xai.VideoTest do
 
       assert request.prompt == "Make it longer"
       assert request.model == "grok-imagine-video"
-      assert request.video.url == "https://example.com/video.mp4"
+      assert request.video.source == {:url, "https://example.com/video.mp4"}
     end
 
     test "raises when video_url is missing" do

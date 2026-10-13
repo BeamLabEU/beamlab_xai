@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.2 - 2026-10-13
+
+### Fixed
+
+- **`Xai.Video.build_extend_request/1` builds the new `VideoUrlContent`
+  shape.** Upstream turned `VideoUrlContent.url` into a `oneof source` (with a
+  new `file_id` alternative), so the struct no longer has a `url` field; the
+  request now sets `source: {:url, video_url}`.
+
+### Changed
+
+- **xai-proto submodule updated to upstream `065692d`.** Adds
+  `safety_identifier`, `EFFORT_XHIGH`, tool-call streaming and an
+  `image_generation` tool to chat; 1080p, reference audio, `last_frame`,
+  `keyframes` and `storage_options` to video; `quality` and `storage_options`
+  to image. The new fields are available on the generated structs but are not
+  yet exposed through the high-level `Xai.Chat` / `Xai.Video` options.
+- **Dependency updates for security advisories**: `protobuf` 0.17.1, `mint`
+  1.11.0, `grpc` / `grpc_core` 1.0.5, `cowlib` 2.21.0 (plus `hpax`, `dialyxir`,
+  `ex_doc`, `mox`). `gun` stays at 2.4.1 because `grpc` requires
+  `gun ~> 2.4.0`; `cowlib` 2.21.0 still carries CVE-2026-43966 (MEDIUM) with
+  no fixed release yet. It is only pulled in by the `gun` adapter — using the
+  `mint` adapter avoids it.
+
 ## 0.2.1 - 2026-08-11
 
 ### Fixed
