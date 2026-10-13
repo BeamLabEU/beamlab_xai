@@ -52,7 +52,7 @@ are gitignored in the git repo. They **are** included when publishing to Hex
 | `mix dialyzer` | Run static type analysis (`.dialyzer_ignore.exs` documents the currently-accepted findings and why) |
 | `mix docs` | Build documentation |
 
-As of this writing, `mix quality.audit` reports advisories against `cowlib` (pulled in transitively via `gun`, used for gRPC's HTTP/2 transport) with no fixed release available yet — nothing to act on until upstream patches it. Re-check periodically.
+As of 2026-10-13, `mix quality.audit` still fails on `cowlib` (pulled in via `gun`, gRPC's default HTTP/2 transport) — **and it is expected to keep failing; there is no fix to wait for.** The advisories (CVE-2026-43966, -43969, -43971) are for encoder functions (`cow_http_struct_hd:escape_string/2`, `cow_cookie:cookie/1`, `cow_link:link/1`) that don't validate caller-supplied strings. The maintainer, who is actively releasing, rejects them as invalid because validation is done at a different level, and says neither Gun nor Cowboy is affected (ninenines/cowlib#167, closed). This library only talks to a fixed endpoint and never feeds user-controlled strings into those encoders. Don't fork or pin around it. Consumers who want no `cowlib` at all can use the Mint adapter (`adapter:` on `Xai.Client.new/1`). `gun` itself is capped at 2.4.x by `grpc`; re-check when `grpc` lifts that. Other advisories (`mint`, `protobuf`, etc.) are real — update those.
 
 ### Running with a real key (local only)
 
